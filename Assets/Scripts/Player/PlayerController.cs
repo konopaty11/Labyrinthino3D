@@ -30,9 +30,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(_currentMove);
         Move();
         ApplyGravity();
+        ThrowRaycast();
     }
 
     void Move()
@@ -65,7 +65,6 @@ public class PlayerController : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(_currentMove.normalized);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
-
 
         TryStep(direction);
 
@@ -110,5 +109,20 @@ public class PlayerController : MonoBehaviour
         if (!_controller.isGrounded) return;
 
         _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
+    }
+
+    void ThrowRaycast()
+    {
+        Vector3 direction = _playerCamera.forward;
+        Vector3 start = transform.position + Vector3.forward * 0.5f;
+
+        Ray ray = new(start, direction);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 0.5f))
+        {
+            Debug.Log(hit.collider.name);
+        }
+
+        Debug.DrawRay(start, direction * 0.5f, Color.blue, 999f);
     }
 }

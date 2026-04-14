@@ -24,12 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4518472077087904929}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -28.4, y: 0, z: -0.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4518472077087904930
 MonoBehaviour:
@@ -64,7 +65,6 @@ MonoBehaviour:
     bridge: {fileID: 0}
   house: {fileID: 4569763070667865883, guid: 573d27f542f67d8489d5126c7cbbe105, type: 3}
   bridge: {fileID: 1542140438955730227, guid: 235170a2fc8e90d439bbf87509e6eaf6, type: 3}
-  updateInEditor: 0
   isCircle: 0
   closeAngle: 90
   deleteInnerAdditionals: 1
@@ -81,3 +81,4 @@ MonoBehaviour:
   roofEndLength: 0
   roofOverlay: 1
   roofWidth: 1
+  updateInEditor: 0

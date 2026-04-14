@@ -14,6 +14,8 @@ public class DialogManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI content;
     [SerializeField] DialogConfig dialogConfig;
 
+    [SerializeField] GameManager gameManager;
+
     int _currentMessageIndex = 0;
 
     public void OpenWindow()
@@ -25,6 +27,9 @@ public class DialogManager : MonoBehaviour
     public void CloseWindow()
     {
         PlayerPrefs.SetInt(GameManager.IsDialogPassed, 1);
+        //PlayerPrefs.Save();
+
+        gameManager.DialogEnded();
         dialogCanvas.SetActive(false);
     }
 
