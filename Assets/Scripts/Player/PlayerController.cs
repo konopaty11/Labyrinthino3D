@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] GameObject interactButton;
+
     [SerializeField] float _moveSpeed = 1.7f;
     [SerializeField] float _accelerationTime = 0.5f;
     [SerializeField] float _gravity = -9.8f;
@@ -18,6 +20,8 @@ public class PlayerController : MonoBehaviour
 
     float _currentSpeed;
     float _time;
+
+    string _interactTag = "Interactable";
 
     [Header("Input")]
     [SerializeField] JoystickController _moveJoystick;
@@ -80,7 +84,7 @@ public class PlayerController : MonoBehaviour
     void TryStep(Vector3 direction)
     {
         if (direction.magnitude < 0.1f) return;
-        if (!_controller.isGrounded) return;
+        if (!IsGrounded()) return;
 
         Vector3 originLow = transform.position + Vector3.up * 0.05f;
         Vector3 originHigh = transform.position + Vector3.up * (_stepHeight + 0.1f);
@@ -96,7 +100,7 @@ public class PlayerController : MonoBehaviour
 
     void ApplyGravity()
     {
-        if (_controller.isGrounded && _velocity.y < 0)
+        if (IsGrounded() && _velocity.y < 0)
         {
             _velocity.y = -2f;
         }
@@ -104,9 +108,15 @@ public class PlayerController : MonoBehaviour
         _velocity.y += _gravity * Time.deltaTime;
     }
 
+    bool IsGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, 1.1f);
+    }
+
     public void Jump()
     {
-        if (!_controller.isGrounded) return;
+        Debug.Log(IsGrounded());
+        if (!IsGrounded()) return;
 
         _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
     }
@@ -114,15 +124,19 @@ public class PlayerController : MonoBehaviour
     void ThrowRaycast()
     {
         Vector3 direction = _playerCamera.forward;
-        Vector3 start = transform.position + Vector3.forward * 0.5f;
+        Vector3 start = transform.position;
 
         Ray ray = new(start, direction);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 0.5f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 1f))
         {
-            Debug.Log(hit.collider.name);
+            if (hit.collider.CompareTag(_interactTag))
+            {
+                interactButton.SetActive(true);
+                return;
+            }
         }
 
-        Debug.DrawRay(start, direction * 0.5f, Color.blue, 999f);
+        interactButton.SetActive(false);
     }
 }
