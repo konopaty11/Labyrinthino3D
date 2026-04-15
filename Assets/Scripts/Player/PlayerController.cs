@@ -70,7 +70,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
 
-        TryStep(direction);
+        //TryStep(direction);
 
         _time += Time.deltaTime;
         if (_moveJoystick.Movement == Vector2.zero)
@@ -78,7 +78,8 @@ public class PlayerController : MonoBehaviour
 
         float speed = Mathf.Lerp(0, 1, _time / 0.5f);
 
-        _controller.Move((_currentMove + _velocity) * Time.deltaTime * speed);
+        Debug.Log($"{(_currentMove + _velocity) * Time.deltaTime * speed} -- {_velocity} -- {speed}");
+        _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime);
     }
 
     void TryStep(Vector3 direction)
