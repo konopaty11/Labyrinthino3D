@@ -22,6 +22,9 @@ public class PlayerController : MonoBehaviour
     float _time;
 
     string _interactTag = "Interactable";
+    string _waterTag = "Water";
+
+    bool _intoWater;
 
     [Header("Input")]
     [SerializeField] JoystickController _moveJoystick;
@@ -70,8 +73,6 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
 
-        //TryStep(direction);
-
         _time += Time.deltaTime;
         if (_moveJoystick.Movement == Vector2.zero)
             _time = 0f;
@@ -80,23 +81,6 @@ public class PlayerController : MonoBehaviour
 
         Debug.Log($"{(_currentMove + _velocity) * Time.deltaTime * speed} -- {_velocity} -- {speed}");
         _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime);
-    }
-
-    void TryStep(Vector3 direction)
-    {
-        if (direction.magnitude < 0.1f) return;
-        if (!IsGrounded()) return;
-
-        Vector3 originLow = transform.position + Vector3.up * 0.05f;
-        Vector3 originHigh = transform.position + Vector3.up * (_stepHeight + 0.1f);
-
-        if (Physics.Raycast(originLow, direction, out RaycastHit hitLow, _stepCheckDistance))
-        {
-            if (!Physics.Raycast(originHigh, direction, _stepCheckDistance))
-            {
-                _controller.Move(Vector3.up * _stepHeight);
-            }
-        }
     }
 
     void ApplyGravity()
@@ -116,8 +100,7 @@ public class PlayerController : MonoBehaviour
 
     public void Jump()
     {
-        Debug.Log(IsGrounded());
-        if (!IsGrounded()) return;
+        if (!IsGrounded() || _intoWater) return;
 
         _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
     }
@@ -139,5 +122,16 @@ public class PlayerController : MonoBehaviour
         }
 
         interactButton.SetActive(false);
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        _intoWater = other.CompareTag(_waterTag);
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag(_waterTag))
+            _intoWater = false;
     }
 }

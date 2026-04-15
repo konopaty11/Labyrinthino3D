@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting;
+using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
@@ -47,11 +48,12 @@ public class CameraController : MonoBehaviour
     {
         Quaternion horizontalRotation = Quaternion.Euler(0f, _yRotation, 0f);
 
-        Vector3 offset = new Vector3(0f, _cameraHeight, -_distanceFromPlayer);
+        Vector3 offset = new Vector3(0f, _cameraHeight);
         Vector3 targetPosition = _player.position + horizontalRotation * offset;
 
         transform.position = targetPosition;
 
-        transform.rotation = Quaternion.Euler(_xRotation, _yRotation, 0f);
+        transform.rotation = Quaternion.Euler(_xRotation, _yRotation, 0f); 
+        _player.rotation = Quaternion.Euler(_player.eulerAngles.x, _yRotation, _player.eulerAngles.z);
     }
 }
