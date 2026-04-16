@@ -1,9 +1,16 @@
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
-[RequireComponent(typeof(CharacterController))]
+/// <summary>
+/// класс игрока
+/// </summary>
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] GameObject interactButton;
+    [SerializeField] Vector3 positionToCarry;
+    [SerializeField] LayerMask mask;
+    [SerializeField] PasswordManager passwordManager;
 
     [SerializeField] float _moveSpeed = 1.7f;
     [SerializeField] float _accelerationTime = 0.5f;
@@ -23,18 +30,30 @@ public class PlayerController : MonoBehaviour
 
     string _interactTag = "Interactable";
     string _waterTag = "Water";
+    string _zoneToPutTag = "ZoneToPut";
 
     bool _intoWater;
+    GameObject _carryObject;
+    IInteractable _currentInteractable;
 
     [Header("Input")]
     [SerializeField] JoystickController _moveJoystick;
     [SerializeField] Transform _playerCamera;
 
+    public static event UnityAction PutItem;
+    public static event UnityAction<ItemType> PickupItem;
+
+    /// <summary>
+    /// старт
+    /// </summary>
     void Start()
     {
         _controller = GetComponent<CharacterController>();
     }
 
+    /// <summary>
+    /// апдейт
+    /// </summary>
     void Update()
     {
         Move();
@@ -42,6 +61,9 @@ public class PlayerController : MonoBehaviour
         ThrowRaycast();
     }
 
+    /// <summary>
+    /// движение
+    /// </summary>
     void Move()
     {
         Vector3 cameraForward = _playerCamera.transform.forward;
@@ -79,10 +101,12 @@ public class PlayerController : MonoBehaviour
 
         float speed = Mathf.Lerp(0, 1, _time / 0.5f);
 
-        Debug.Log($"{(_currentMove + _velocity) * Time.deltaTime * speed} -- {_velocity} -- {speed}");
         _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime);
     }
 
+    /// <summary>
+    /// логика гравитации
+    /// </summary>
     void ApplyGravity()
     {
         if (IsGrounded() && _velocity.y < 0)
@@ -93,11 +117,18 @@ public class PlayerController : MonoBehaviour
         _velocity.y += _gravity * Time.deltaTime;
     }
 
+    /// <summary>
+    /// на земле ли игрок
+    /// </summary>
+    /// <returns></returns>
     bool IsGrounded()
     {
         return Physics.Raycast(transform.position, Vector3.down, 1.1f);
     }
 
+    /// <summary>
+    /// прыжок
+    /// </summary>
     public void Jump()
     {
         if (!IsGrounded() || _intoWater) return;
@@ -105,30 +136,82 @@ public class PlayerController : MonoBehaviour
         _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
     }
 
+    /// <summary>
+    /// бросает рейксаст
+    /// </summary>
     void ThrowRaycast()
     {
         Vector3 direction = _playerCamera.forward;
-        Vector3 start = transform.position;
+        Vector3 start = _playerCamera.position;
 
         Ray ray = new(start, direction);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 1f))
+        if (Physics.Raycast(start, direction, out RaycastHit hit, 15f, mask))
         {
-            if (hit.collider.CompareTag(_interactTag))
+            Vector3 pointOnTarget = hit.collider.ClosestPoint(_controller.bounds.center);
+            Vector3 pointOnPlayer = _controller.ClosestPoint(pointOnTarget);
+
+            float distance = Vector3.Distance(pointOnPlayer, pointOnTarget);
+
+            if (hit.collider.CompareTag(_interactTag) && distance <= 0.5f)
             {
+                _currentInteractable = hit.collider.GetComponent<IInteractable>();
                 interactButton.SetActive(true);
                 return;
             }
         }
 
+        Debug.DrawRay(start, direction * 4, Color.magenta, 0.1f);
+
         interactButton.SetActive(false);
     }
 
-    void OnTriggerEnter(Collider other)
+    /// <summary>
+    /// взаимодействие
+    /// </summary>
+    public void Interact()
     {
-        _intoWater = other.CompareTag(_waterTag);
+        if (_currentInteractable is ItemToCarry itemToCarry)
+        {
+            if (_carryObject != null)
+                return;
+
+            PickupItem?.Invoke(itemToCarry.itemType);
+            _carryObject = itemToCarry.gameObject;
+            _carryObject.transform.SetParent(_playerCamera);
+            _carryObject.transform.localPosition = positionToCarry;
+        }
+        else if (_currentInteractable is Door door)
+        {
+            _currentInteractable.Interact();
+        }
+        else if (_currentInteractable is PasswordPart passwordPart)
+        {
+            passwordManager.SetNextNumber(passwordPart.symbol);
+        }
     }
 
+    /// <summary>
+    /// вход в коллайдер триггера
+    /// </summary>
+    /// <param name="other"></param>
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag(_waterTag))
+        {
+            _intoWater = true;
+        }
+        else if (other.CompareTag(_zoneToPutTag))
+        {
+            PutItem?.Invoke();
+            Destroy(_carryObject);
+        }
+    }
+
+    /// <summary>
+    /// выход из коллайдера триггера
+    /// </summary>
+    /// <param name="other"></param>
     void OnTriggerExit(Collider other)
     {
         if (other.CompareTag(_waterTag))

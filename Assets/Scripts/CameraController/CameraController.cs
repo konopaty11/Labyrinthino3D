@@ -49,7 +49,7 @@ public class CameraController : MonoBehaviour
         Quaternion horizontalRotation = Quaternion.Euler(0f, _yRotation, 0f);
 
         Vector3 offset = new Vector3(0f, _cameraHeight);
-        Vector3 targetPosition = _player.position + horizontalRotation * offset;
+        Vector3 targetPosition = _player.position + Vector3.down + horizontalRotation * offset;
 
         transform.position = targetPosition;
 

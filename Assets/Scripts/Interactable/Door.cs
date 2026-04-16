@@ -7,8 +7,12 @@ public class Door : MonoBehaviour, IInteractable
 {
     [SerializeField] int indexScene;
 
+    public bool isLocked;
+
     public void Interact()
     {
-        SceneManager.LoadScene(indexScene);
+        Debug.Log(isLocked);
+        if (!isLocked)
+            SceneManager.LoadScene(indexScene);
     }
 }
