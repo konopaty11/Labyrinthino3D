@@ -33,14 +33,14 @@ public class PlayerController : MonoBehaviour
     string _zoneToPutTag = "ZoneToPut";
 
     bool _intoWater;
-    GameObject _carryObject;
+    ItemToCarry _itemCarry;
     IInteractable _currentInteractable;
 
     [Header("Input")]
     [SerializeField] JoystickController _moveJoystick;
     [SerializeField] Transform _playerCamera;
 
-    public static event UnityAction PutItem;
+    public static event UnityAction<ItemType> PutItem;
     public static event UnityAction<ItemType> PickupItem;
 
     /// <summary>
@@ -173,13 +173,14 @@ public class PlayerController : MonoBehaviour
     {
         if (_currentInteractable is ItemToCarry itemToCarry)
         {
-            if (_carryObject != null)
+            if (_itemCarry != null)
                 return;
 
             PickupItem?.Invoke(itemToCarry.itemType);
-            _carryObject = itemToCarry.gameObject;
-            _carryObject.transform.SetParent(_playerCamera);
-            _carryObject.transform.localPosition = positionToCarry;
+            _itemCarry = itemToCarry;
+            Debug.Log(_itemCarry);
+            _itemCarry.transform.SetParent(_playerCamera);
+            _itemCarry.transform.localPosition = positionToCarry;
         }
         else if (_currentInteractable is Door door)
         {
@@ -187,7 +188,10 @@ public class PlayerController : MonoBehaviour
         }
         else if (_currentInteractable is PasswordPart passwordPart)
         {
+            PickupItem?.Invoke(ItemType.Password);
             passwordManager.SetNextNumber(passwordPart.symbol);
+
+            Destroy(passwordPart.gameObject);
         }
     }
 
@@ -201,10 +205,11 @@ public class PlayerController : MonoBehaviour
         {
             _intoWater = true;
         }
-        else if (other.CompareTag(_zoneToPutTag))
+        else if (other.CompareTag(_zoneToPutTag) && _itemCarry != null)
         {
-            PutItem?.Invoke();
-            Destroy(_carryObject);
+            PutItem?.Invoke(_itemCarry.itemType);
+            Debug.Log("destroy");
+            Destroy(_itemCarry.gameObject);
         }
     }
 

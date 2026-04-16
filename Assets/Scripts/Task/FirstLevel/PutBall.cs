@@ -9,17 +9,20 @@ public class PutBall : TaskBase
 
     void OnEnable()
     {
-        PlayerController.PutItem += Complete;
+        PlayerController.PutItem += OnPutBall;
     }
 
     void OnDisable()
     {
-        PlayerController.PutItem -= Complete;
+        PlayerController.PutItem -= OnPutBall;
     }
 
-    public override void Complete()
+    void OnPutBall(ItemType type)
     {
+        if (type != ItemType.Ball)
+            return;
+        
         password.SetActive(true);
-        base.Complete();
+        Complete();
     }
 }

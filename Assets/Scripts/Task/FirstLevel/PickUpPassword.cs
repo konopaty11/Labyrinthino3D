@@ -19,6 +19,9 @@ public class PickUpPassword : TaskBase
     void PickupPassword(ItemType itemType)
     {
         if (itemType == ItemType.Password)
+        {
+            door.isLocked = false;
             Complete();
+        }
     }
 }
