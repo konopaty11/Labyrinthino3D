@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _stepHeight = 0.4f;
     [SerializeField] float _stepCheckDistance = 0.5f;
 
+    public Vector3 PlatformOffset { get; set; }
+
     CharacterController _controller;
     Vector3 _velocity;
     Vector3 _currentMove;
@@ -101,7 +103,8 @@ public class PlayerController : MonoBehaviour
 
         float speed = Mathf.Lerp(0, 1, _time / 0.5f);
 
-        _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime);
+        _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime + PlatformOffset);
+        PlatformOffset = Vector3.zero;
     }
 
     /// <summary>
@@ -144,8 +147,6 @@ public class PlayerController : MonoBehaviour
         Vector3 direction = _playerCamera.forward;
         Vector3 start = _playerCamera.position;
 
-        Ray ray = new(start, direction);
-
         if (Physics.Raycast(start, direction, out RaycastHit hit, 15f, mask))
         {
             Vector3 pointOnTarget = hit.collider.ClosestPoint(_controller.bounds.center);
@@ -178,7 +179,7 @@ public class PlayerController : MonoBehaviour
 
             PickupItem?.Invoke(itemToCarry.itemType);
             _itemCarry = itemToCarry;
-            Debug.Log(_itemCarry);
+
             _itemCarry.transform.SetParent(_playerCamera);
             _itemCarry.transform.localPosition = positionToCarry;
         }
