@@ -21,9 +21,31 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _stepHeight = 0.4f;
     [SerializeField] float _stepCheckDistance = 0.5f;
 
-    public Vector3 PlatformOffset { get; set; }
+    public Vector3 PlatformOffset
+    {
+        get
+        {
+            Debug.Log(_platform);
+            if (_platform == null)
+                return Vector3.zero;
+
+            return _platform.PlatformOffset;
+        }
+    }
+
+    public Vector3 PlatformVelocity
+    {
+        get 
+        { 
+            if (_platform == null)
+                return Vector3.zero;
+
+            return _platform.Velocity; 
+        } 
+    }
 
     CharacterController _controller;
+    Vector3 _externalVelocity;
     Vector3 _velocity;
     Vector3 _currentMove;
 
@@ -33,10 +55,13 @@ public class PlayerController : MonoBehaviour
     string _interactTag = "Interactable";
     string _waterTag = "Water";
     string _zoneToPutTag = "ZoneToPut";
+    string _movingPlatformTag = "MovingPlatform";
 
     bool _intoWater;
+    bool _isGrounded;
     ItemToCarry _itemCarry;
     IInteractable _currentInteractable;
+    MovingPlatform _platform;
 
     [Header("Input")]
     [SerializeField] JoystickController _moveJoystick;
@@ -103,8 +128,7 @@ public class PlayerController : MonoBehaviour
 
         float speed = Mathf.Lerp(0, 1, _time / 0.5f);
 
-        _controller.Move((_currentMove) * Time.deltaTime * speed + _velocity * Time.deltaTime + PlatformOffset);
-        PlatformOffset = Vector3.zero;
+        _controller.Move((_currentMove) * Time.deltaTime * speed + (_velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
     }
 
     /// <summary>
@@ -118,6 +142,8 @@ public class PlayerController : MonoBehaviour
         }
 
         _velocity.y += _gravity * Time.deltaTime;
+
+        _externalVelocity = Vector3.Lerp(_externalVelocity, Vector3.zero, Time.deltaTime);
     }
 
     /// <summary>
@@ -126,7 +152,14 @@ public class PlayerController : MonoBehaviour
     /// <returns></returns>
     bool IsGrounded()
     {
-        return Physics.Raycast(transform.position, Vector3.down, 1.1f);
+        _isGrounded = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 1.1f);
+
+        if (_isGrounded && hit.collider.CompareTag(_movingPlatformTag))
+            _platform = hit.collider.GetComponent<MovingPlatform>();
+        else
+            _platform = null;
+        Debug.Log(_platform);
+        return _isGrounded;
     }
 
     /// <summary>
@@ -134,8 +167,9 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     public void Jump()
     {
-        if (!IsGrounded() || _intoWater) return;
+        if (!_isGrounded || _intoWater) return;
 
+        _externalVelocity = PlatformVelocity;
         _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
     }
 

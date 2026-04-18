@@ -7,6 +7,7 @@ TagManager:
   - Interactable
   - Water
   - ZoneToPut
+  - MovingPlatform
   layers:
   - Default
   - TransparentFX

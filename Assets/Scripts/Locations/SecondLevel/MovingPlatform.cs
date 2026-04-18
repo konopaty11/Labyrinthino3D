@@ -6,10 +6,12 @@ public class MovingPlatform : MonoBehaviour
 {
     [SerializeField] Vector3 firstPosition;
     [SerializeField] Vector3 secondPosition;
-    [SerializeField] PlayerController player;
 
     [SerializeField] float speed = 1f;
     [SerializeField] float waitTime = 3f;
+
+    public Vector3 PlatformOffset { get; private set; }
+    public Vector3 Velocity { get; private set; }
 
     Vector3 _target;
     float _waitTimer;
@@ -30,6 +32,9 @@ public class MovingPlatform : MonoBehaviour
                 _waiting = false;
                 _target = _target == firstPosition? secondPosition : firstPosition;
             }
+
+            PlatformOffset = Vector3.zero;
+            Velocity = Vector3.zero;
             return;
         }
 
@@ -43,26 +48,13 @@ public class MovingPlatform : MonoBehaviour
 
         Vector3 delta = transform.position - oldPos;
 
-        if (IsPlayerOnPlatform())
-        {
-            player.PlatformOffset = delta;
-        }
+        PlatformOffset = delta;
+        Velocity = delta / Time.deltaTime;
 
         if (Vector3.Distance(transform.localPosition, _target) < 0.01f)
         {
             _waiting = true;
             _waitTimer = waitTime;
         }
-    }
-
-    bool IsPlayerOnPlatform()
-    {
-        return Physics.Raycast
-            (
-                player.transform.position,
-                Vector3.down,
-                out RaycastHit hit,
-                1.2f
-            ) && hit.transform == transform;
     }
 }
