@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -7,10 +8,12 @@ using UnityEngine.UI;
 /// </summary>
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] GameObject interactButton;
+    [SerializeField] InteractButton interactButton;
     [SerializeField] Vector3 positionToCarry;
     [SerializeField] LayerMask mask;
     [SerializeField] PasswordManager passwordManager;
+    [SerializeField] Material ballMaterial;
+    [SerializeField] GameObject ballPrefab;
 
     [SerializeField] float _moveSpeed = 1.7f;
     [SerializeField] float _accelerationTime = 0.5f;
@@ -21,11 +24,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _stepHeight = 0.4f;
     [SerializeField] float _stepCheckDistance = 0.5f;
 
+    Queue<GameObject> _balls = new();
+
     public Vector3 PlatformOffset
     {
         get
         {
-            Debug.Log(_platform);
             if (_platform == null)
                 return Vector3.zero;
 
@@ -43,6 +47,10 @@ public class PlayerController : MonoBehaviour
             return _platform.Velocity; 
         } 
     }
+
+    public BallColorType CurrentColorType { get; private set; }
+
+    public GameObject ThrowingBall { get; set; }
 
     CharacterController _controller;
     Vector3 _externalVelocity;
@@ -76,6 +84,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         _controller = GetComponent<CharacterController>();
+        ballMaterial.color = Color.yellow;
     }
 
     /// <summary>
@@ -158,7 +167,7 @@ public class PlayerController : MonoBehaviour
             _platform = hit.collider.GetComponent<MovingPlatform>();
         else
             _platform = null;
-        Debug.Log(_platform);
+
         return _isGrounded;
     }
 
@@ -196,9 +205,8 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        Debug.DrawRay(start, direction * 4, Color.magenta, 0.1f);
-
-        interactButton.SetActive(false);
+        //Debug.DrawRay(start, direction * 4, Color.magenta, 0.1f);
+        interactButton.SetActive(ThrowingBall != null);
     }
 
     /// <summary>
@@ -216,6 +224,9 @@ public class PlayerController : MonoBehaviour
 
             _itemCarry.transform.SetParent(_playerCamera);
             _itemCarry.transform.localPosition = positionToCarry;
+
+            if (_itemCarry.itemType == ItemType.Ball)
+                CurrentColorType = BallColorType.Yellow;
         }
         else if (_currentInteractable is Door door)
         {
@@ -228,6 +239,41 @@ public class PlayerController : MonoBehaviour
 
             Destroy(passwordPart.gameObject);
         }
+        else if (_currentInteractable is BallColorInteractable ballColor)
+        {
+            if (_itemCarry == null || _itemCarry.itemType != ItemType.Ball)
+                return;
+
+            CurrentColorType = ballColor.color;
+            ballMaterial.color = GetColor(ballColor.color);
+            Destroy(ballColor.gameObject);
+        }
+        else if (ThrowingBall != null)
+        {
+            Destroy(ThrowingBall);
+
+            GameObject ballObject = Instantiate(ballPrefab, _playerCamera.position, Quaternion.identity);
+
+            _balls.Enqueue(ballObject);
+            if (_balls.Count > 10) 
+                Destroy(_balls.Dequeue());
+
+            Rigidbody rg = ballObject.GetComponent<Rigidbody>();
+            rg.velocity = _playerCamera.forward * 3f;
+
+            ThrowingBall ball = ballObject.GetComponent<ThrowingBall>();
+            ball.Throw();
+        }
+    }
+
+    Color GetColor(BallColorType type)
+    {
+        return type switch
+        {
+            BallColorType.Blue => Color.blue,
+            BallColorType.Yellow => Color.yellow,
+            BallColorType.Red => Color.red,
+        };
     }
 
     /// <summary>
@@ -243,7 +289,6 @@ public class PlayerController : MonoBehaviour
         else if (other.CompareTag(_zoneToPutTag) && _itemCarry != null)
         {
             PutItem?.Invoke(_itemCarry.itemType);
-            Debug.Log("destroy");
             Destroy(_itemCarry.gameObject);
         }
     }

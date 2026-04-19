@@ -21,7 +21,6 @@ public class TaskManager : MonoBehaviour
         if (index != _currentTaskIndex)
             return;
 
-        Debug.Log(index);
         ShowNextTask();
     }
 
