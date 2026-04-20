@@ -4,7 +4,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
-/// класс игрока
+/// player class
 /// </summary>
 public class PlayerController : MonoBehaviour
 {
@@ -54,10 +54,10 @@ public class PlayerController : MonoBehaviour
 
     CharacterController _controller;
     Vector3 _externalVelocity;
-    Vector3 _velocity;
+    public Vector3 Velocity;
     Vector3 _currentMove;
 
-    float _currentSpeed;
+    public float CurrentSpeed { get; private set; }
     float _time;
 
     string _interactTag = "Interactable";
@@ -88,7 +88,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// апдейт
+    /// update
     /// </summary>
     void Update()
     {
@@ -98,7 +98,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// движение
+    /// movement
     /// </summary>
     void Move()
     {
@@ -115,13 +115,13 @@ public class PlayerController : MonoBehaviour
         direction = Vector3.ClampMagnitude(direction, 1f);
 
         float targetSpeed = direction.magnitude * _moveSpeed;
-        _currentSpeed = Mathf.MoveTowards(_currentSpeed, targetSpeed, _moveSpeed / _accelerationTime * Time.deltaTime);
+        CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, targetSpeed, _moveSpeed / _accelerationTime * Time.deltaTime);
 
-        _currentMove = direction * _currentSpeed;
+        _currentMove = direction * CurrentSpeed;
 
         if (_moveJoystick.Movement.magnitude < 0.01f)
         {
-            _currentSpeed = 0;
+            CurrentSpeed = 0;
             _currentMove = Vector3.zero;
         }
 
@@ -137,29 +137,29 @@ public class PlayerController : MonoBehaviour
 
         float speed = Mathf.Lerp(0, 1, _time / 0.5f);
 
-        _controller.Move((_currentMove) * Time.deltaTime * speed + (_velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
+        _controller.Move((_currentMove) * Time.deltaTime * speed + (Velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
     }
 
     /// <summary>
-    /// логика гравитации
+    /// gravity logic
     /// </summary>
     void ApplyGravity()
     {
-        if (IsGrounded() && _velocity.y < 0)
+        if (IsGrounded() && Velocity.y < 0)
         {
-            _velocity.y = -2f;
+            Velocity.y = -2f;
         }
 
-        _velocity.y += _gravity * Time.deltaTime;
+        Velocity.y += _gravity * Time.deltaTime;
 
         _externalVelocity = Vector3.Lerp(_externalVelocity, Vector3.zero, Time.deltaTime);
     }
 
     /// <summary>
-    /// на земле ли игрок
+    /// is player grounded
     /// </summary>
     /// <returns></returns>
-    bool IsGrounded()
+    public bool IsGrounded()
     {
         _isGrounded = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 1.1f);
 
@@ -172,18 +172,18 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// прыжок
+    /// jump
     /// </summary>
     public void Jump()
     {
         if (!_isGrounded || _intoWater) return;
 
         _externalVelocity = PlatformVelocity;
-        _velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
+        Velocity.y = Mathf.Sqrt(_jumpForce * -1f * _gravity);
     }
 
     /// <summary>
-    /// бросает рейксаст
+    /// Throw Raycast
     /// </summary>
     void ThrowRaycast()
     {
@@ -210,7 +210,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// взаимодействие
+    /// interact to things
     /// </summary>
     public void Interact()
     {
@@ -252,7 +252,7 @@ public class PlayerController : MonoBehaviour
         {
             Destroy(ThrowingBall);
 
-            GameObject ballObject = Instantiate(ballPrefab, _playerCamera.position, Quaternion.identity);
+            GameObject ballObject = Instantiate(ballPrefab, _playerCamera.position + ballPrefab.transform.localPosition, Quaternion.identity);
 
             _balls.Enqueue(ballObject);
             if (_balls.Count > 10) 
@@ -266,6 +266,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+
     Color GetColor(BallColorType type)
     {
         return type switch
@@ -276,8 +277,26 @@ public class PlayerController : MonoBehaviour
         };
     }
 
+    public void SimulateMove(float deltaTime, Vector2 input)
+    {
+        Vector3 direction = new Vector3(input.x, 0, input.y);
+
+        float targetSpeed = direction.magnitude * _moveSpeed;
+        CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, targetSpeed, _moveSpeed / _accelerationTime * deltaTime);
+    }
+
+    public void SimulateGravity(float deltaTime)
+    {
+        Velocity.y += _gravity * deltaTime;
+    }
+
+    public void ForceJump()
+    {
+        Velocity.y = Mathf.Sqrt(_jumpForce * -3f * _gravity);
+    }
+
     /// <summary>
-    /// вход в коллайдер триггера
+    /// enter interact things collider
     /// </summary>
     /// <param name="other"></param>
     void OnTriggerEnter(Collider other)
@@ -294,7 +313,7 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// выход из коллайдера триггера
+    /// exit interact things collider
     /// </summary>
     /// <param name="other"></param>
     void OnTriggerExit(Collider other)

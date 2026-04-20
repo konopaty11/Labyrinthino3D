@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// основнйо менеджер игры
+/// main managerof the game
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour
     public const string SoundActive = "SoundActive";
 
     /// <summary>
-    /// старт
+    /// start game
     /// </summary>
     void Start()
     {
@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// начало диалога
+    /// begin the dialog
     /// </summary>
     void StartDialog()
     {
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// окончание диалога
+    /// on dialog ended
     /// </summary>
     public void DialogEnded()
     {
