@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     [Header("Step settings")]
     [SerializeField] float _stepHeight = 0.4f;
     [SerializeField] float _stepCheckDistance = 0.5f;
+    [SerializeField] Rigidbody rg;
 
     Queue<GameObject> _balls = new();
 
@@ -111,33 +112,38 @@ public class PlayerController : MonoBehaviour
         cameraForward.Normalize();
         cameraRight.Normalize();
 
-        Vector3 direction = cameraForward * _moveJoystick.Movement.y + cameraRight * _moveJoystick.Movement.x;
-        direction = Vector3.ClampMagnitude(direction, 1f);
+        //Vector3 direction = cameraForward * _moveJoystick.Movement.y + cameraRight * _moveJoystick.Movement.x;
+        //direction = Vector3.ClampMagnitude(direction, 1f);
 
-        float targetSpeed = direction.magnitude * _moveSpeed;
-        CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, targetSpeed, _moveSpeed / _accelerationTime * Time.deltaTime);
+        //float targetSpeed = direction.magnitude * _moveSpeed;
+        //CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, targetSpeed, _moveSpeed / _accelerationTime * Time.deltaTime);
+
+        //_currentMove = direction * CurrentSpeed;
+
+        //if (_moveJoystick.Movement.magnitude < 0.01f)
+        //{
+        //    CurrentSpeed = 0;
+        //    _currentMove = Vector3.zero;
+        //}
+
+
+        //_time += Time.deltaTime;
+        //if (_moveJoystick.Movement == Vector2.zero)
+        //    _time = 0f;
+
+        //float speed = Mathf.Lerp(0, 1, _time / 0.5f);
+
+        //_controller.Move((_currentMove) * Time.deltaTime + (Velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
+
+       Vector3 direction = cameraForward * _moveJoystick.Movement.y + cameraRight * _moveJoystick.Movement.x;
+       direction = Vector3.ClampMagnitude(direction, 1f);
+
+        float _targetSpeed = direction.magnitude * _moveSpeed;
+        CurrentSpeed = Mathf.MoveTowards(CurrentSpeed, _targetSpeed, _moveSpeed / _accelerationTime * Time.deltaTime);
 
         _currentMove = direction * CurrentSpeed;
 
-        if (_moveJoystick.Movement.magnitude < 0.01f)
-        {
-            CurrentSpeed = 0;
-            _currentMove = Vector3.zero;
-        }
-
-        if (_currentMove.magnitude > 0.1f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(_currentMove.normalized);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
-        }
-
-        _time += Time.deltaTime;
-        if (_moveJoystick.Movement == Vector2.zero)
-            _time = 0f;
-
-        float speed = Mathf.Lerp(0, 1, _time / 0.5f);
-
-        _controller.Move((_currentMove) * Time.deltaTime * speed + (Velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
+        _controller.Move((_currentMove + Velocity + _externalVelocity) * Time.deltaTime + PlatformOffset);
     }
 
     /// <summary>
@@ -206,7 +212,7 @@ public class PlayerController : MonoBehaviour
         }
 
         //Debug.DrawRay(start, direction * 4, Color.magenta, 0.1f);
-        interactButton.SetActive(ThrowingBall != null);
+        //interactButton.SetActive(ThrowingBall != null);
     }
 
     /// <summary>

@@ -9,7 +9,6 @@ using UnityEngine.UI;
 public class SettingsManager : MonoBehaviour
 {
     [SerializeField] GameObject settingsCanvas;
-    [SerializeField] Animator toggleAnimator;
     [SerializeField] Toggle toggle;
     [SerializeField] RectTransform handle;
     [SerializeField] Image background;
